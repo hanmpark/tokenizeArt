@@ -324,6 +324,11 @@ textarea {
   word-break: break-all;
 }
 
+.mono {
+  font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+  word-break: break-all;
+}
+
 .error {
   color: #ff9f9f;
 }

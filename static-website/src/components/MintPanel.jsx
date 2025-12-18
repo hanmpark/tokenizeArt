@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../contract'
-import { encodeMetadataToDataUri } from '../utils/metadata'
+import { dataUriToJson, encodeMetadataToDataUri } from '../utils/metadata'
 
 const defaultMintForm = {
   recipient: '',
+  tokenUri: '',
+}
+
+const defaultMetadataHelper = {
   name: '',
   description: '',
   externalUrl: '',
   imageFile: null,
+  imageUrl: '',
 }
-
-const MAX_FILE_BYTES = 80_000 // ~80 KB raw file size guard to avoid huge on-chain payloads
 
 export function MintPanel({
   account,
@@ -24,6 +27,7 @@ export function MintPanel({
   onMinted,
 }) {
   const [mintForm, setMintForm] = useState(defaultMintForm)
+  const [metadataForm, setMetadataForm] = useState(defaultMetadataHelper)
   const [minting, setMinting] = useState(false)
   const [mintResult, setMintResult] = useState(null)
 
@@ -41,6 +45,38 @@ export function MintPanel({
       reader.readAsDataURL(file)
     })
 
+  const buildTokenUriFromMetadata = async () => {
+    setStatus('Encoding metadata...')
+    try {
+      const imageData = metadataForm.imageFile
+        ? await fileToDataUrl(metadataForm.imageFile)
+        : null
+      const imageField =
+        imageData ||
+        (metadataForm.imageUrl && metadataForm.imageUrl.trim().length > 0
+          ? metadataForm.imageUrl.trim()
+          : undefined)
+
+      const metadata = {
+        name: metadataForm.name || 'tokenizeArt inscription',
+        description:
+          metadataForm.description ||
+          'An on-chain inscription generated via tokenizeArt.',
+        image: imageField,
+        external_url: metadataForm.externalUrl || undefined,
+        created_by: account,
+        timestamp: new Date().toISOString(),
+      }
+
+      const tokenUri = encodeMetadataToDataUri(metadata)
+      setMintForm((prev) => ({ ...prev, tokenUri }))
+      setStatus('Token URI generated from metadata helper.')
+    } catch (error) {
+      console.error(error)
+      setStatus('Failed to encode metadata to a token URI.')
+    }
+  }
+
   const handleMint = async (event) => {
     event.preventDefault()
     setMintResult(null)
@@ -56,32 +92,14 @@ export function MintPanel({
       setStatus('Switch your wallet to Sepolia before minting.')
       return
     }
-    if (!mintForm.imageFile) {
-      setStatus('Add an image to inscribe on-chain.')
-      return
-    }
-    if (mintForm.imageFile.size > MAX_FILE_BYTES) {
-      setStatus('Image too large; use a smaller file (<80 KB) to fit in the on-chain URI.')
+    const tokenUri = (mintForm.tokenUri || '').trim()
+    if (!tokenUri) {
+      setStatus('Add a token URI (paste one or generate it from metadata).')
       return
     }
     setMinting(true)
-    setStatus('Encoding metadata...')
+    setStatus('Submitting mint transaction...')
     try {
-      const imageData = await fileToDataUrl(mintForm.imageFile)
-      const metadata = {
-        name: mintForm.name || 'tokenizeArt inscription',
-        description:
-          mintForm.description ||
-          'An on-chain inscription generated via tokenizeArt.',
-        image: imageData,
-        external_url: mintForm.externalUrl || undefined,
-        created_by: account,
-        timestamp: new Date().toISOString(),
-      }
-
-      const tokenUri = encodeMetadataToDataUri(metadata)
-
-      setStatus('Submitting mint transaction...')
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
       const tx = await contract.safeMint(
         mintForm.recipient || account,
@@ -103,12 +121,14 @@ export function MintPanel({
         transferLog?.args?.[2]?.toString?.() ||
         null
 
+      const decodedMetadata = dataUriToJson(tokenUri)
+
       const minted = {
         tokenId: mintedTokenId,
         owner: mintForm.recipient || account,
         txHash: receipt.hash,
         uri: tokenUri,
-        metadata,
+        metadata: decodedMetadata,
       }
       setMintResult(minted)
       onMinted?.(minted)
@@ -126,11 +146,17 @@ export function MintPanel({
       <div className="panel-head">
         <div>
           <p className="label">Mint inscription</p>
-          <h2>Store metadata + image on-chain</h2>
+          <h2>Mint with tokenURI (safeMint)</h2>
         </div>
         <span className="chip">safeMint</span>
       </div>
       <form className="form" onSubmit={handleMint}>
+        <div className="field">
+          <p className="label">Direct safeMint</p>
+          <p className="subtle small">
+            Provide recipient + tokenURI (data/https/ipfs). Nothing else required.
+          </p>
+        </div>
         <div className="field">
           <label>Recipient</label>
           <input
@@ -146,14 +172,37 @@ export function MintPanel({
             required
           />
         </div>
-        <div className="field-row">
+        <div className="field">
+          <label>Token URI</label>
+          <textarea
+            rows="3"
+            value={mintForm.tokenUri}
+            onChange={(e) =>
+              setMintForm((prev) => ({
+                ...prev,
+                tokenUri: e.target.value,
+              }))
+            }
+            placeholder="data:application/json;base64,... or https://... or ipfs://..."
+            required
+          />
+          <p className="subtle small">
+            safeMint only needs `to` + `tokenURI`. Paste any prepared tokenURI here (on-chain or off-chain).
+          </p>
+        </div>
+        <details className="upload-box">
+          <summary>Need to build an on-chain inscription? (optional helper)</summary>
+          <p className="subtle small">
+            Fill metadata below and click “Generate tokenURI”. The field above will be populated with a
+            `data:application/json;base64,...` URI that embeds everything (and can be minted immediately).
+          </p>
           <div className="field">
             <label>Name</label>
             <input
               type="text"
-              value={mintForm.name}
+              value={metadataForm.name}
               onChange={(e) =>
-                setMintForm((prev) => ({
+                setMetadataForm((prev) => ({
                   ...prev,
                   name: e.target.value,
                 }))
@@ -162,12 +211,26 @@ export function MintPanel({
             />
           </div>
           <div className="field">
+            <label>Description</label>
+            <textarea
+              rows="3"
+              value={metadataForm.description}
+              onChange={(e) =>
+                setMetadataForm((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="What is this inscription about?"
+            />
+          </div>
+          <div className="field">
             <label>External link (optional)</label>
             <input
               type="url"
-              value={mintForm.externalUrl}
+              value={metadataForm.externalUrl}
               onChange={(e) =>
-                setMintForm((prev) => ({
+                setMetadataForm((prev) => ({
                   ...prev,
                   externalUrl: e.target.value,
                 }))
@@ -175,49 +238,54 @@ export function MintPanel({
               placeholder="https://"
             />
           </div>
-        </div>
-        <div className="field">
-          <label>Description</label>
-          <textarea
-            rows="3"
-            value={mintForm.description}
-            onChange={(e) =>
-              setMintForm((prev) => ({
-                ...prev,
-                description: e.target.value,
-              }))
-            }
-            placeholder="What is this inscription about?"
-          />
-        </div>
-        <div className="field upload">
-          <label>Image to inscribe</label>
-          <div className="upload-box">
+          <div className="field upload">
+            <label>Image (optional)</label>
             <input
-              type="file"
-              accept="image/*"
+              type="url"
+              value={metadataForm.imageUrl}
               onChange={(e) =>
-                setMintForm((prev) => ({
+                setMetadataForm((prev) => ({
                   ...prev,
-                  imageFile: e.target.files?.[0] || null,
+                  imageUrl: e.target.value,
                 }))
               }
-              required
+              placeholder="https://... or ipfs://..."
             />
-            <p className="subtle">
-              File is encoded to base64 and embedded directly in the token URI.
-            </p>
-            {mintForm.imageFile && (
-              <p className="selected">
-                Selected: {mintForm.imageFile.name} (
-                {Math.round(mintForm.imageFile.size / 1024)} KB)
+            <div className="upload-box">
+              <p className="subtle small">Or upload to embed directly on-chain:</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setMetadataForm((prev) => ({
+                    ...prev,
+                    imageFile: e.target.files?.[0] || null,
+                  }))
+                }
+              />
+              <p className="subtle">
+                File is encoded to base64 and embedded directly in the token URI.
               </p>
-            )}
-            <p className="subtle small">
-              Tip: keep images under 80 KB (e.g. 256–512px) to stay within gas limits.
-            </p>
+              {metadataForm.imageFile && (
+                <p className="selected">
+                  Selected: {metadataForm.imageFile.name} (
+                  {Math.round(metadataForm.imageFile.size / 1024)} KB)
+                </p>
+              )}
+              <p className="subtle small">
+                Tip: larger images mean bigger on-chain payloads and gas costs.
+              </p>
+            </div>
           </div>
-        </div>
+          <button
+            type="button"
+            className="outline"
+            onClick={buildTokenUriFromMetadata}
+            disabled={minting}
+          >
+            Generate tokenURI and fill above
+          </button>
+        </details>
         <button className="primary" type="submit" disabled={minting}>
           {minting ? 'Minting...' : 'Mint inscription'}
         </button>
@@ -238,6 +306,10 @@ export function MintPanel({
             >
               {mintResult.txHash}
             </a>
+          </p>
+          <p className="value">
+            Token URI:{' '}
+            <span className="mono">{mintResult.uri}</span>
           </p>
           <details>
             <summary>Metadata preview</summary>
