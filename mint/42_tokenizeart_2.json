@@ -1,0 +1,10 @@
+{
+  "name": "42 – TokenizeArt #2",
+  "description": "An experimental NFT created for the 42 TokenizeArt project.",
+  "image": "ipfs://bafybeiaikusb63neowo76kbzsnkjkx4o2xrrns34gpdzkeddv64jvuy5x4",
+  "artist": "hanmpark",
+  "attributes": [
+    { "trait_type": "School", "value": "42" },
+    { "trait_type": "Project", "value": "TokenizeArt" }
+  ]
+}
