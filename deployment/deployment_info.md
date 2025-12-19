@@ -11,12 +11,22 @@
 
 If you redeploy, replace these values everywhere you reference the contract (README + docs).
 
+## 1.1) Bonus deployment (on-chain SVG)
+- **Contract**: `OnChainTokenizeArt` (`42ARTC`)
+- **Address**: `0xd6C4f897a2c2de060b284288DA520870Fb6c9425`
+- **Network**: Ethereum Sepolia testnet
+- **Source file**: `code/ChainTokenizeArtNFT.sol`
+
+This bonus contract stores SVG strings on-chain and returns a `data:application/json;base64,...` tokenURI.
+
 ## 2) Prerequisites
 - MetaMask installed with Sepolia enabled.
 - Sepolia ETH for gas (any faucet works).
 - Remix IDE: https://remix.ethereum.org/
 - Source file: `code/TokenizeArtNFT.sol`
 - Compiler version: `0.8.27`.
+
+Bonus contract source file (optional): `code/ChainTokenizeArtNFT.sol`
 
 ## 3) Deployment steps (Remix + MetaMask)
 1. Open Remix and create `TokenizeArtNFT.sol` under `/contracts`, paste the contents of `code/TokenizeArtNFT.sol`.
@@ -49,6 +59,7 @@ If you redeploy, replace these values everywhere you reference the contract (REA
 - **Verification mismatch**: compiler version or optimization flag differs from Remix settings.
 - **Mint reverted**: only `owner()` can call `safeMint`; confirm you are using the owner account.
 - **Metadata not loading**: verify the IPFS CID is pinned and the JSON includes an `image` field.
+- **On-chain SVG gas too high**: reduce the SVG complexity or size before minting.
 
 ## 7) Summary
 Following the steps above you can reproduce the Sepolia deployment, verify the source on Etherscan, and mint new NFTs using IPFS-hosted metadata. Update the address references whenever you redeploy so evaluators can interact without extra setup.

@@ -11,6 +11,11 @@
 
 If you redeploy, replace the address and tokenURI values in this file.
 
+Bonus contract (on-chain SVG):
+- **Contract**: `OnChainTokenizeArt` (`42ARTC`)
+- **Address**: `0xd6C4f897a2c2de060b284288DA520870Fb6c9425`
+- **Source**: `code/ChainTokenizeArtNFT.sol`
+
 ## 2) Prerequisites
 - MetaMask installed and set to **Sepolia**.
 - A wallet with some Sepolia ETH for gas.
@@ -39,6 +44,19 @@ Steps on Etherscan:
 
 Tip: token IDs increment from 1 automatically. If tokenId 1 exists, the next mint will create tokenId 2.
 
+## 4.1) Minting with the on-chain SVG bonus contract (owner only)
+The bonus contract stores the SVG directly on-chain and returns an on-chain metadata URI.
+
+Steps on Etherscan:
+1. Open `https://sepolia.etherscan.io/address/0xd6C4f897a2c2de060b284288DA520870Fb6c9425`.
+2. Go to **Contract → Write Contract → Connect to Web3**.
+3. Expand `safeMint`.
+4. Fill fields:
+   - `to`: recipient wallet address.
+   - `svg`: full SVG string (start with `<svg ...>`). Smaller SVGs cost less gas.
+5. Click **Write** and confirm in MetaMask.
+6. After mining, call `tokenURI(newTokenId)` in **Read Contract** to see the on-chain `data:application/json;base64,...` metadata.
+
 ## 5) Using the provided metadata samples
 - Metadata JSON examples: `mint/42_tokenizeart_1.json`, `mint/42_tokenizeart_2.json`.
 - Metadata URIs: `ipfs://bafkreif7of2nrir4ruzl4j5wkevkxjzmnge2jczoqzugsciu4bvrfoxvfq`, `ipfs://bafkreianbtoa72nqv5lraekwa5ynze5a7s64ilmxishvyyjyuxzkkwjafq`.
@@ -59,6 +77,7 @@ You can mint directly against these metadata URIs or pin your own JSON to IPFS a
 
 ## 8) Useful references
 - Contract source: `code/TokenizeArtNFT.sol`
+- Bonus contract source: `code/ChainTokenizeArtNFT.sol`
 - Deployment info: `deployment/deployment_info.md`
 
 ## 9) Conclusion

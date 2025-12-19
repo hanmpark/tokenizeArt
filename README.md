@@ -4,10 +4,13 @@
 
 ## 📌 Overview
 
-This project mirrors the Tokenizer ERC-20 work but for NFTs. It ships a single ERC-721 contract that:
-- Stores per-token metadata URIs (IPFS-friendly) via `ERC721URIStorage`.
-- Auto-increments token IDs starting at 1 for cleaner UX.
-- Restricts minting to the contract owner (constructor assigns ownership to a provided address, e.g., a multisig or deployer).
+This project mirrors the Tokenizer ERC-20 work but for NFTs. It ships two ERC-721 variants:
+- **TokenizeArtNFT.sol**: IPFS-friendly metadata URIs via `ERC721URIStorage`.
+- **ChainTokenizeArtNFT.sol (bonus)**: on-chain SVG + metadata stored entirely in the contract.
+
+Both variants:
+- Auto-increment token IDs starting at 1 for cleaner UX.
+- Restrict minting to the contract owner (constructor assigns ownership to a provided address, e.g., a multisig or deployer).
 
 ### Current Sepolia deployment
 - **Network**: Sepolia testnet (Ethereum)
@@ -23,6 +26,12 @@ This project mirrors the Tokenizer ERC-20 work but for NFTs. It ships a single E
 
 If you redeploy, update the addresses and tx hashes here and in the docs.
 
+### Bonus Sepolia deployment (on-chain SVG)
+- **Contract**: `OnChainTokenizeArt` (`42ARTC`)
+- **Address**: `0xd6C4f897a2c2de060b284288DA520870Fb6c9425`
+- **Network**: Sepolia testnet (Ethereum)
+- **Source**: `code/ChainTokenizeArtNFT.sol`
+
 ## 🏗 Project structure
 
 ```
@@ -30,6 +39,7 @@ project-root/
 ├── README.md                        # High-level overview
 ├── code/
 │   └── TokenizeArtNFT.sol           # ERC-721 contract (owner-only mint, URI storage)
+│   └── ChainTokenizeArtNFT.sol      # Bonus: on-chain SVG + metadata storage
 ├── deployment/
 │   └── deployment_info.md           # Network, address, deploy/verify steps
 ├── documentation/
@@ -49,6 +59,12 @@ project-root/
 - Token IDs start at 1 and increment automatically.
 - Ownership is assigned to the `initialOwner` constructor argument (use a multisig or deployer EOA).
 
+## 🔍 Contract behavior (ChainTokenizeArtNFT.sol - bonus)
+- Standard ERC-721 built on OpenZeppelin `ERC721` + `Ownable`.
+- Owner-only `safeMint(address to, string svg)` mints and stores the raw SVG string on-chain.
+- `tokenURI(tokenId)` returns a fully on-chain `data:application/json;base64,...` URI with an embedded `data:image/svg+xml;base64,...` image.
+- Token IDs start at 1 and increment automatically.
+
 ## 🚀 How to interact (quick view)
 - View on Etherscan: `https://sepolia.etherscan.io/address/0x7ceDcd571F8C33DE2b10B41798cc4bA873c57Ae4`
 - **Read**: `name`, `symbol`, `owner()`, `ownerOf(tokenId)`, `tokenURI(tokenId)`, `balanceOf(account)`.
@@ -56,6 +72,11 @@ project-root/
 - Token trackers and NFT images appear automatically on Etherscan once metadata is reachable.
 
 Detailed steps (with screenshots and parameters) are in `documentation/how_to_use_nft.md`.
+
+Bonus (on-chain SVG) quick view:
+- View on Etherscan: `https://sepolia.etherscan.io/address/0xd6C4f897a2c2de060b284288DA520870Fb6c9425`
+- **Read**: `name`, `symbol`, `owner()`, `ownerOf(tokenId)`, `tokenURI(tokenId)`, `balanceOf(account)`.
+- **Write (owner only)**: `safeMint(to, svg)` using a compact SVG string (large SVGs can be expensive).
 
 ## 🧾 Metadata references
 - Sample metadata JSON: `mint/42_tokenizeart_1.json`, `mint/42_tokenizeart_2.json`
