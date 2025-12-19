@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ethers } from 'ethers'
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../contract'
-import { dataUriToJson } from '../utils/metadata'
+import { fetchMetadataFromUri } from '../utils/metadata'
 
 export function InspectPanel({ ready, provider, sessionMints }) {
   const [inspectId, setInspectId] = useState('')
@@ -31,7 +31,7 @@ export function InspectPanel({ ready, provider, sessionMints }) {
         contract.ownerOf(inspectId),
         contract.tokenURI(inspectId),
       ])
-      const metadata = dataUriToJson(uri)
+      const metadata = await fetchMetadataFromUri(uri)
       setInspection({
         tokenId: inspectId,
         owner: ownerOf,
@@ -85,13 +85,6 @@ export function InspectPanel({ ready, provider, sessionMints }) {
             <>
               <p className="label">Metadata</p>
               <pre>{JSON.stringify(inspection.metadata, null, 2)}</pre>
-              {inspection.metadata.image && (
-                <img
-                  src={inspection.metadata.image}
-                  alt={inspection.metadata.name}
-                  className="preview"
-                />
-              )}
             </>
           )}
         </div>

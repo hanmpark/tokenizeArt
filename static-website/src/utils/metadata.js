@@ -33,3 +33,28 @@ export const encodeMetadataToDataUri = (metadata) => {
   const base64Metadata = window.btoa(binaryString)
   return `data:application/json;base64,${base64Metadata}`
 }
+
+const ipfsToHttp = (uri) =>
+  uri.startsWith('ipfs://')
+    ? `https://ipfs.io/ipfs/${uri.replace('ipfs://', '')}`
+    : uri
+
+export const fetchMetadataFromUri = async (uri) => {
+  if (!uri) return null
+
+  // Fast-path for embedded data URIs
+  const embedded = dataUriToJson(uri)
+  if (embedded) return embedded
+
+  const resolved = ipfsToHttp(uri)
+  if (!resolved.startsWith('http')) return null
+
+  try {
+    const res = await fetch(resolved)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return await res.json()
+  } catch (error) {
+    console.error('Failed to fetch metadata from URI', uri, error)
+    return null
+  }
+}

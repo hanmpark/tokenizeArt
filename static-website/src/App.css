@@ -19,10 +19,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 14px 24px;
   background: rgba(7, 10, 18, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   z-index: 10;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -44,14 +46,12 @@
   letter-spacing: 0.08em;
 }
 
-.brand-main {
-  font-size: 22px;
-}
-
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .pill {
@@ -154,7 +154,7 @@
 
 .panel.stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
 }
 
@@ -184,6 +184,7 @@
 .value {
   margin: 4px 0 10px;
   font-weight: 600;
+  word-break: break-word;
 }
 
 .subtle {
@@ -378,6 +379,11 @@ textarea {
   background: rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   margin-left: 6px;
+}
+
+.address {
+  word-break: break-all;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 @media (max-width: 700px) {

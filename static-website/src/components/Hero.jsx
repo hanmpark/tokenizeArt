@@ -5,10 +5,9 @@ export function Hero({ connect, account, network, status }) {
     <section className="hero">
       <div>
         <p className="eyebrow">On-chain inscriptions</p>
-        <h1>Mint, store, and inspect NFTs without leaving the browser.</h1>
+        <h1>42 TokenizeArt</h1>
         <p className="lede">
-          Build permanent art objects by embedding metadata and image payloads
-          directly inside the token URI. Deployed on Sepolia at
+          Deployed on Sepolia at
           <code>{CONTRACT_ADDRESS}</code>.
         </p>
         <div className="hero-actions">
@@ -28,7 +27,7 @@ export function Hero({ connect, account, network, status }) {
       <div className="panel stats">
         <div>
           <p className="label">Wallet</p>
-          <p className="value">{account || 'Not connected'}</p>
+          <p className="value address">{account || 'Not connected'}</p>
         </div>
         <div>
           <p className="label">Network</p>

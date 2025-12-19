@@ -4,13 +4,16 @@ export function NavBar({ ready, currentChainOk, connect, account }) {
   return (
     <header className="nav">
       <div className="brand">
-        <span className="badge">tokenize</span>
-        <span className="brand-main">Art</span>
+        <span className="badge">TokenizeArt</span>
       </div>
       <div className="nav-actions">
         <div className="pill">
           <span className="dot" />
-          {ready ? 'Wallet ready' : 'No wallet detected'}
+          {!ready
+            ? 'No wallet detected'
+            : account
+              ? 'Wallet connected'
+              : 'Wallet detected — connect'}
         </div>
         <div className={`pill ${currentChainOk ? 'good' : 'warn'}`}>
           {currentChainOk ? 'Sepolia' : 'Switch to Sepolia'}
